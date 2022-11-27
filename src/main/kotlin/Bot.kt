@@ -23,7 +23,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         conn = DriverManager.getConnection(url, props)
         val st = conn.createStatement()
         st.execute("CREATE TABLE IF NOT EXISTS keys " +
-                "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL, key varchar(200) NOT NULL);")
+                "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);")
         st.close()
     }
 
@@ -55,7 +55,8 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
     }
 
     private fun addKey(chatId: String, vkKey: String) {
-        val st = conn.prepareStatement("INSERT INTO keys(chatId, key) VALUES (?, ?);")
+        val st = conn.prepareStatement("INSERT INTO keys(chatId, key) VALUES (?, ?) " +
+                "ON CONFLICT (chatId) DO UPDATE SET key=EXCLUDED.key;")
         st.setString(1, chatId)
         st.setString(2, vkKey)
         st.executeUpdate()
