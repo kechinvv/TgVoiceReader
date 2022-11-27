@@ -17,7 +17,8 @@ repositories {
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.7.20")
     testImplementation(kotlin("test"))
-    implementation("org.telegram:telegrambots:$tgApi")
+    implementation("org.telegram:telegrambots-abilities:$tgApi")
+    implementation("org.postgresql:postgresql:42.5.1")
 }
 
 
