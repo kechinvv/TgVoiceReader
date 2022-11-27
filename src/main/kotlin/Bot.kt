@@ -54,11 +54,31 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
             .build()
     }
 
+    fun deleteFlow(): ReplyFlow {
+        return ReplyFlow.builder(db)
+            .action { _, upd ->
+                deleteKey(getChatId(upd).toString())
+                silent.send(
+                    "Successfully deleted",
+                    getChatId(upd)
+                )
+            }
+            .onlyIf(hasMessageWith("/deletekey"))
+            .build()
+    }
+
     private fun addKey(chatId: String, vkKey: String) {
         val st = conn.prepareStatement("INSERT INTO keys(chatId, key) VALUES (?, ?) " +
                 "ON CONFLICT (chatId) DO UPDATE SET key=EXCLUDED.key;")
         st.setString(1, chatId)
         st.setString(2, vkKey)
+        st.executeUpdate()
+        st.close()
+    }
+
+    private fun deleteKey(chatId: String) {
+        val st = conn.prepareStatement("DELETE FROM keys WHERE chatId = ?;")
+        st.setString(1, chatId)
         st.executeUpdate()
         st.close()
     }
