@@ -1,3 +1,5 @@
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.telegram.abilitybots.api.bot.AbilityBot
 import org.telegram.abilitybots.api.objects.Reply
@@ -14,7 +16,7 @@ import java.util.function.Predicate
 
 class Bot(val token: String, val username: String) : AbilityBot(token, username) {
     private lateinit var conn: Connection
-
+    val vkApi = VKApi()
 
     override fun onRegister() {
         super.onRegister()
@@ -24,8 +26,10 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         props.setProperty("password", File("C:\\Users\\valer\\IdeaProjects\\TgVoiceReader\\db.txt").readText())
         conn = DriverManager.getConnection(url, props)
         val st = conn.createStatement()
-        st.execute("CREATE TABLE IF NOT EXISTS keys " +
-                "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);")
+        st.execute(
+            "CREATE TABLE IF NOT EXISTS keys " +
+                    "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);"
+        )
         st.close()
     }
 
@@ -72,19 +76,17 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
     fun readVoiceFlow(): ReplyFlow {
         return ReplyFlow.builder(db)
             .action { _, upd ->
-                val msg = readVoice(upd.message.voice.fileId)
-                silent.send(
-                    msg,
-                    getChatId(upd)
-                )
+                readVoice(upd)
             }
             .onlyIf(hasVoice())
             .build()
     }
 
     private fun addKey(chatId: String, vkKey: String) {
-        val st = conn.prepareStatement("INSERT INTO keys(chatId, key) VALUES (?, ?) " +
-                "ON CONFLICT (chatId) DO UPDATE SET key=EXCLUDED.key;")
+        val st = conn.prepareStatement(
+            "INSERT INTO keys(chatId, key) VALUES (?, ?) " +
+                    "ON CONFLICT (chatId) DO UPDATE SET key=EXCLUDED.key;"
+        )
         st.setString(1, chatId)
         st.setString(2, vkKey)
         st.executeUpdate()
@@ -98,14 +100,42 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         st.close()
     }
 
-    private fun readVoice(fileId: String): String {
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun readVoice(update: Update) {
+        kotlinx.coroutines.GlobalScope.launch {
+            val file = downloadVoice(update.message.voice.fileId)
+            val vkKey = getVkKey(update.message.chatId.toString())
+            val uploadUrl = vkApi.getUploadUrl(vkKey)
+            val urlResponse = vkApi.uploadVoice(uploadUrl, file, vkKey)
+            val taskId = vkApi.getTaskId(urlResponse, vkKey)
+            val result = vkApi.getTextFromVoice(vkKey, taskId)
+            file.delete()
+            silent.send(
+                result,
+                getChatId(update)
+            )
+        }
+    }
+
+    private fun getVkKey(chatId: String): String {
+        var res = ""
+        val st = conn.prepareStatement("SELECT key FROM keys WHERE chatid = ?")
+        st.setString(1, chatId)
+        val rs = st.executeQuery()
+        if (rs.next()) res = rs.getString(1)
+        rs.close()
+        st.close()
+        return res
+    }
+
+    private fun downloadVoice(fileId: String): File {
         val uploadedFile = GetFile()
         uploadedFile.fileId = fileId
         val file = execute(uploadedFile)
         val localFile = File("localVoice/$fileId.ogg")
         val inpStr = URL(file.getFileUrl(token)).openStream()
         FileUtils.copyInputStreamToFile(inpStr, localFile)
-        return "aaa"
+        return localFile
     }
 
     override fun creatorId(): Long {

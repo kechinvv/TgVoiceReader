@@ -12,6 +12,7 @@ val tgApi = "6.3.0"
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jcenter.bintray.com/") }
 }
 
 dependencies {
@@ -19,6 +20,9 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("org.telegram:telegrambots-abilities:$tgApi")
     implementation("org.postgresql:postgresql:42.5.1")
+    implementation("khttp:khttp:1.0.0")
+    implementation("com.google.code.gson:gson:2.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 
 
