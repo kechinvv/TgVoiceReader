@@ -51,8 +51,12 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
             .next(
                 Reply.of(
                     { _, upd ->
-                        addKey(getChatId(upd).toString(), upd.message.text)
-                        silent.send("Key added or replacement successfully", getChatId(upd))
+                        try {
+                            addKey(getChatId(upd).toString(), upd.message.text)
+                            silent.send("Key added or replacement successfully", getChatId(upd))
+                        } catch (e: Exception) {
+                            silent.send(e.message, getChatId(upd))
+                        }
                     }, hasKey()
                 )
             )
@@ -63,9 +67,13 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
     fun deleteFlow(): ReplyFlow {
         return ReplyFlow.builder(db)
             .action { _, upd ->
-                val del = deleteKey(getChatId(upd).toString())
-                if (del == 1) silent.send("Successfully deleted", getChatId(upd))
-                else silent.send("There is no key to delete", getChatId(upd))
+                try {
+                    val del = deleteKey(getChatId(upd).toString())
+                    if (del == 1) silent.send("Successfully deleted", getChatId(upd))
+                    else silent.send("There is no key to delete", getChatId(upd))
+                } catch (e: Exception) {
+                    silent.send(e.message, getChatId(upd))
+                }
             }
             .onlyIf(hasMessageWith("/deletekey"))
             .build()
@@ -74,7 +82,11 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
     fun readVoiceFlow(): ReplyFlow {
         return ReplyFlow.builder(db)
             .action { _, upd ->
-                readVoice(upd)
+                try {
+                    readVoice(upd)
+                } catch (e: Exception) {
+                    silent.send(e.message, getChatId(upd))
+                }
             }
             .onlyIf(hasVoice())
             .build()
