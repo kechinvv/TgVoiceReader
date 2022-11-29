@@ -36,7 +36,7 @@ class VKApi() {
     suspend fun getTextFromVoice(token: String, taskId: String): String {
         var status = ""
         var gsonText = ""
-        var gson: JsonObject
+        var gson = JsonObject()
         while (status == "" || status == "processing") {
             delay(1000)
             gsonText = get(
@@ -47,6 +47,6 @@ class VKApi() {
             if (gson.has("error")) throw Exception(gson.get("error").asJsonObject.get("error_msg").asString)
             status = gson.get("response").asJsonObject.get("status").asString
         }
-        return JsonParser.parseString(gsonText).asJsonObject.get("response").asJsonObject.get("text").asString
+        return gson.get("response").asJsonObject.get("text").asString
     }
 }

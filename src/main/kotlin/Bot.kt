@@ -1,5 +1,4 @@
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.apache.commons.io.FileUtils
 import org.telegram.abilitybots.api.bot.AbilityBot
 import org.telegram.abilitybots.api.objects.Reply
@@ -25,12 +24,12 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         props.setProperty("user", "postgres")
         props.setProperty("password", File("C:\\Users\\valer\\IdeaProjects\\TgVoiceReader\\db.txt").readText())
         conn = DriverManager.getConnection(url, props)
-        val st = conn.createStatement()
-        st.execute(
-            "CREATE TABLE IF NOT EXISTS keys " +
-                    "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);"
-        )
-        st.close()
+        conn.createStatement().use { st ->
+            st.execute(
+                "CREATE TABLE IF NOT EXISTS keys " +
+                        "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);"
+            )
+        }
     }
 
     override fun onClosing() {
@@ -114,7 +113,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun readVoice(update: Update) {
-        kotlinx.coroutines.GlobalScope.launch {
+        GlobalScope.launch {
             try {
                 val file = downloadVoice(update.message.voice.fileId)
                 val vkKey = getVkKey(update.message.chatId.toString())
