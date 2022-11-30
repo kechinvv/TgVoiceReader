@@ -22,7 +22,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         val url = "jdbc:postgresql://localhost:5432/KeysStorage"
         val props = Properties()
         props.setProperty("user", "postgres")
-        props.setProperty("password", File("C:\\Users\\valer\\IdeaProjects\\TgVoiceReader\\db.txt").readText())
+        props.setProperty("password", System.getenv("POSTGRES_PASSWORD"))
         conn = DriverManager.getConnection(url, props)
         conn.createStatement().use { st ->
             st.execute(
