@@ -19,10 +19,10 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
 
     override fun onRegister() {
         super.onRegister()
-        val url = "jdbc:postgresql://localhost:5432/KeysStorage"
+        val url = "jdbc:postgresql://"+System.getenv("HOST")+"/KeysStorage"
         val props = Properties()
         props.setProperty("user", "postgres")
-        props.setProperty("password", File("C:\\Users\\valer\\IdeaProjects\\TgVoiceReader\\db.txt").readText())
+        props.setProperty("password", System.getenv("POSTGRES_PASSWORD"))
         conn = DriverManager.getConnection(url, props)
         conn.createStatement().use { st ->
             st.execute(

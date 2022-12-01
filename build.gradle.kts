@@ -2,13 +2,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.7.20"
+    id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
 group = "me.valer"
-version = "1.0-SNAPSHOT"
-
-
+version = "1.0"
 val tgApi = "6.3.0"
+
+
 
 repositories {
     mavenCentral()
@@ -25,6 +26,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 
+tasks.jar {
+    manifest.attributes["Main-Class"] = "MainKt"
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar>() {
+    exclude("META-INF/*.RSA", "META-INF/*.DSA", "META-INF/*.SF")
+}
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions.jvmTarget = "1.8"

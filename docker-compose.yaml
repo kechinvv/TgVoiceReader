@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${pg_pas}
+      POSTGRES_DB: KeysStorage
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  bot:
+    image: strgss/tgvoicereaderbot
+    container_name: bot
+    environment:
+      TG_TOKEN: ${tg_token}
+      POSTGRES_PASSWORD: ${pg_pas}
+      HOST: postgres:5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+volumes:
+  postgres:
+    driver: local
+
+
+
+
