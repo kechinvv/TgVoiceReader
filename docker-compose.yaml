@@ -24,6 +24,9 @@ services:
     environment:
       TG_TOKEN: ${tg_token}
       POSTGRES_PASSWORD: ${pg_pas}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: KeysStorage
+      BOT_NAME: ${bot_name}
       HOST: postgres:5432
     depends_on:
       postgres:

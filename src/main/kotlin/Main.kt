@@ -6,7 +6,7 @@ import java.io.File
 fun main() {
     try {
         val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
-        botsApi.registerBot(Bot(System.getenv("TG_TOKEN"), "SecondEarsBot"))
+        botsApi.registerBot(Bot(System.getenv("TG_TOKEN"), System.getenv("BOT_NAME")))
     } catch (e: TelegramApiException) {
         e.printStackTrace()
     }
