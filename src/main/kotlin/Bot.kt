@@ -21,7 +21,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         super.onRegister()
         val url = "jdbc:postgresql://"+System.getenv("HOST")+"/KeysStorage"
         val props = Properties()
-        props.setProperty("user", System.getenv("POSTGRES_USER"))
+        props.setProperty("user", "postgres")
         props.setProperty("password", System.getenv("POSTGRES_PASSWORD"))
         conn = DriverManager.getConnection(url, props)
         conn.createStatement().use { st ->
