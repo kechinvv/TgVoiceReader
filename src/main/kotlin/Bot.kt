@@ -19,7 +19,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
 
     override fun onRegister() {
         super.onRegister()
-        val url = "jdbc:postgresql://"+System.getenv("HOST")+":5432/KeysStorage"
+        val url = "jdbc:postgresql://"+System.getenv("HOST")+"/KeysStorage"
         val props = Properties()
         props.setProperty("user", System.getenv("POSTGRES_USER"))
         props.setProperty("password", System.getenv("POSTGRES_PASSWORD"))
