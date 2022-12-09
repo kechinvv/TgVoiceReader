@@ -1,4 +1,6 @@
 # TgVoiceReader
+[![Tests](https://github.com/kechinvv/TgVoiceReader/actions/workflows/tests.yml/badge.svg)](https://github.com/kechinvv/TgVoiceReader/actions/workflows/tests.yml)
+
 Telegram bot for extracting text from a voice message.
 
 ## Usage bot:
