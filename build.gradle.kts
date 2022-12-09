@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.7.20")
     testImplementation(kotlin("test"))
     implementation("org.telegram:telegrambots-abilities:$tgApi")
@@ -45,3 +46,7 @@ tasks.create("MyFatJar", Jar::class) {
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
+
+tasks.test {
+    useJUnitPlatform()
+}
