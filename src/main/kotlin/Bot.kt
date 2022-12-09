@@ -9,32 +9,20 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import java.io.File
 import java.net.URL
 import java.sql.Connection
-import java.sql.DriverManager
 import java.util.*
 import java.util.function.Predicate
 
 class Bot(val token: String, val username: String) : AbilityBot(token, username) {
     private lateinit var conn: Connection
-    val vkApi = VKApi()
+
+
+    private val vkApi = VKApi()
+    private val database = DB()
+
 
     override fun onRegister() {
         super.onRegister()
-        val url = "jdbc:postgresql://"+System.getenv("HOST")+"/" + System.getenv("POSTGRES_DB")
-        val props = Properties()
-        props.setProperty("user", System.getenv("POSTGRES_USER"))
-        props.setProperty("password", System.getenv("POSTGRES_PASSWORD"))
-        conn = DriverManager.getConnection(url, props)
-        conn.createStatement().use { st ->
-            st.execute(
-                "CREATE TABLE IF NOT EXISTS keys " +
-                        "(id serial PRIMARY KEY, chatId varchar(50) NOT NULL UNIQUE, key varchar(200) NOT NULL);"
-            )
-        }
-    }
-
-    override fun onClosing() {
-        super.onClosing()
-        conn.close()
+        database.initTable()
     }
 
 
@@ -51,7 +39,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
                 Reply.of(
                     { _, upd ->
                         try {
-                            addKey(getChatId(upd).toString(), upd.message.text)
+                            database.addKey(getChatId(upd).toString(), upd.message.text)
                             silent.send("Key added or replacement successfully", getChatId(upd))
                         } catch (e: Exception) {
                             silent.send(e.message, getChatId(upd))
@@ -67,7 +55,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         return ReplyFlow.builder(db)
             .action { _, upd ->
                 try {
-                    val del = deleteKey(getChatId(upd).toString())
+                    val del = database.deleteKey(getChatId(upd).toString())
                     if (del == 1) silent.send("Successfully deleted", getChatId(upd))
                     else silent.send("There is no key to delete", getChatId(upd))
                 } catch (e: Exception) {
@@ -91,32 +79,13 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
             .build()
     }
 
-    private fun addKey(chatId: String, vkKey: String) {
-        conn.prepareStatement(
-            "INSERT INTO keys(chatId, key) VALUES (?, ?) " +
-                    "ON CONFLICT (chatId) DO UPDATE SET key=EXCLUDED.key;"
-        ).use { st ->
-            st.setString(1, chatId)
-            st.setString(2, vkKey)
-            st.executeUpdate()
-        }
-    }
-
-    private fun deleteKey(chatId: String): Int {
-        var deleted = 0
-        conn.prepareStatement("DELETE FROM keys WHERE chatId = ?;").use { st ->
-            st.setString(1, chatId)
-            deleted = st.executeUpdate()
-        }
-        return deleted
-    }
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun readVoice(update: Update) {
         GlobalScope.launch {
             try {
                 val file = downloadVoice(update.message.voice.fileId)
-                val vkKey = getVkKey(update.message.chatId.toString())
+                val vkKey = database.getVkKey(update.message.chatId.toString())
                 val uploadUrl = vkApi.getUploadUrl(vkKey)
                 val urlResponse = vkApi.uploadVoice(uploadUrl, file, vkKey)
                 val taskId = vkApi.getTaskId(urlResponse, vkKey)
@@ -135,17 +104,7 @@ class Bot(val token: String, val username: String) : AbilityBot(token, username)
         }
     }
 
-    private fun getVkKey(chatId: String): String {
-        var res = ""
-        conn.prepareStatement("SELECT key FROM keys WHERE chatid = ?").use { st ->
-            st.setString(1, chatId)
-            st.executeQuery().use {
-                if (it.next()) res = it.getString(1)
-                else throw Exception("Please add a key for Vk api")
-            }
-        }
-        return res
-    }
+
 
     private fun downloadVoice(fileId: String): File {
         val uploadedFile = GetFile()
