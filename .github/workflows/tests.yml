@@ -31,7 +31,6 @@ jobs:
           POSTGRES_USER: postgres
         ports:
           - 5432:5432
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -44,10 +43,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '8'
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build Bot
-      run: ./gradlew build
-    - name: Run unit tests
-      run: ./gradlew test
+    - uses: gradle/gradle-build-action@v2
+      with:
+        arguments: test
 
