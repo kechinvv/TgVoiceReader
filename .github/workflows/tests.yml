@@ -10,47 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  macos_job:
-    runs-on: macos-latest
-    env:
-      POSTGRES_DB: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      HOST: localhost:5432
-      VK_API: ${{ secrets.VK_API }}
-
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_DB: postgres        
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install docker # Taken from https://github.com/actions/virtual-environments/issues/1143#issuecomment-652264388
-      run: |
-        mkdir -p ~/.docker/machine/cache
-        curl -Lo ~/.docker/machine/cache/boot2docker.iso https://github.com/boot2docker/boot2docker/releases/download/v19.03.12/boot2docker.iso
-        brew install docker docker-machine
-    - uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '8'
-    - uses: gradle/gradle-build-action@v2
-      with:
-        arguments: test
-
-  ubuntu_job:
-    runs-on: ubuntu-latest
+  tests:
+    strategy:
+      matrix:
+        systems: [ ubuntu-20.04, ubuntu-22.04 ]
+    runs-on: ${{ matrix.systems }}
     env:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
@@ -79,6 +43,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
-      - uses: gradle/gradle-build-action@v2
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
           arguments: test
