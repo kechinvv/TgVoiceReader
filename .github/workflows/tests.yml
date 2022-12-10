@@ -40,6 +40,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
