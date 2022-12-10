@@ -11,8 +11,10 @@ permissions:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        systems: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.systems }}
     env:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
